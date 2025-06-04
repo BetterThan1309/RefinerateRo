@@ -122,27 +122,6 @@
             margin-top: 10px;
             text-align: center;
         }
-        /* New styles for volume control */
-        .volume-controls {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 15px;
-            grid-column: 1 / -1; /* Span all columns */
-            justify-content: center;
-        }
-        .volume-controls button {
-            width: 40px;
-            height: 40px;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .volume-controls input[type="range"] {
-            width: 150px;
-        }
     </style>
 </head>
 <body>
@@ -186,12 +165,7 @@
                 <button id="refineOnceBtn">ตีบวกครั้งเดียว</button>
                 <button id="resetItemBtn" class="reset-btn">รีเซ็ตไอเทม</button>
             </div>
-
-            <div class="volume-controls">
-                <button id="muteToggleBtn" aria-label="ปิด/เปิดเสียง">🔇</button>
-                <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5" aria-label="ปรับระดับเสียง">
-            </div>
-            </div>
+        </div>
 
         <h2>ผลลัพธ์การจำลอง:</h2>
         <div id="resultsLog" class="results">
@@ -411,15 +385,10 @@
         const successSound = document.getElementById('successSound');
         const failSound = document.getElementById('failSound');
 
-        // New: Volume Control Elements
-        const muteToggleBtn = document.getElementById('muteToggleBtn');
-        const volumeSlider = document.getElementById('volumeSlider');
-
         let currentRefineLevel = 0;
         let itemBroken = false;
         let totalAttempts = 0;
         let materialsUsed = {}; // Dictionary to store material counts
-        let isMuted = false; // New: Mute state
 
         // Helper function for random number (similar to Python's random.random())
         const random = {
@@ -432,13 +401,13 @@
 
         // New function to play sound
         function playSound(type) {
-            if (isMuted) {
-                return; // Don't play if muted
+            if (type === 'success') {
+                successSound.currentTime = 0; // Rewind to start if already playing
+                successSound.play();
+            } else if (type === 'fail') {
+                failSound.currentTime = 0; // Rewind to start if already playing
+                failSound.play();
             }
-
-            const soundElement = type === 'success' ? successSound : failSound;
-            soundElement.currentTime = 0; // Rewind to start if already playing
-            soundElement.play();
         }
 
         function logResult(message, type = "") {
@@ -672,29 +641,27 @@
 
             if (rand < successRate) {
                 currentRefineLevel++;
-                logResult(`สำเร็จ! ไอเทมของคุณกลายเป็น +${currentRefineLevel}`, "success");
-                playSound('success');
+                logResult(`สำเร็จ! ไอเทมเป็น +${currentRefineLevel}`, "success");
+                playSound('success'); // Play success sound
             } else {
-                logResult(`ล้มเหลว! ไอเทมยังคงเป็น +${currentRefineLevel}`, "fail");
-                playSound('fail');
-
-                // Determine fail effect based on material
-                switch (failEffectRaw) {
-                    case "destroy":
-                        itemBroken = true;
-                        logResult("ไอเทมเสียหายและถูกทำลาย!", "destroy");
-                        break;
-                    case "decrease_1":
-                        currentRefineLevel = Math.max(0, currentRefineLevel - 1);
-                        logResult(`ระดับตีบวกลดลง 1 เหลือ +${currentRefineLevel}`, "decrease");
-                        break;
-                    case "decrease_3":
-                        currentRefineLevel = Math.max(0, currentRefineLevel - 3);
-                        logResult(`ระดับตีบวกลดลง 3 เหลือ +${currentRefineLevel}`, "decrease");
-                        break;
-                    default:
-                        // No specific fail effect, item just stays the same level on fail
-                        break;
+                logResult(`ล้มเหลว!`, "fail");
+                // BSB protection logic
+                if (useBsb && bsbCost > 0 && refineLevelToAttempt >= 7 && refineLevelToAttempt <= 13) {
+                    logResult(`Blacksmith Blessing ป้องกันไอเทมไว้ได้! ไอเทมคงอยู่ที่ +${currentRefineLevel}`, "log-item");
+                } else {
+                    // Apply normal failure effect based on failEffectRaw
+                    if (failEffectRaw === "destroy") {
+                        logResult(`ไอเทมเสียหาย!`, "destroy");
+                        itemBroken = true; // Mark item as broken
+                        playSound('fail'); // Play fail sound if item breaks
+                    } else if (failEffectRaw.startsWith("decrease_")) {
+                        const decreaseAmount = parseInt(failEffectRaw.split('_')[1]);
+                        currentRefineLevel = Math.max(0, currentRefineLevel - decreaseAmount);
+                        logResult(`ระดับตีบวกลดลงเหลือ +${currentRefineLevel}`, "decrease");
+                    } else {
+                        // Default behavior if failEffectRaw is 'none' or unrecognized
+                        logResult(`ไอเทมไม่เสียหาย แต่ระดับตีบวกไม่เปลี่ยนแปลง.`, "fail");
+                    }
                 }
             }
             updateCurrentItemStatus();
@@ -705,65 +672,25 @@
             itemBroken = false;
             totalAttempts = 0;
             materialsUsed = {};
-            resultsLog.innerHTML = ''; // Clear log
+            resultsLog.innerHTML = ''; // Clear logs
             updateCurrentItemStatus();
-            logResult("รีเซ็ตไอเทมแล้ว! เริ่มการจำลองใหม่.", "reset");
+            logResult("รีเซ็ตไอเทมแล้ว. เริ่มการจำลองใหม่ได้เลย!", "");
         }
-
-        // --- New: Volume Control Functions ---
-        function toggleMute() {
-            isMuted = !isMuted;
-            successSound.muted = isMuted;
-            failSound.muted = isMuted;
-            muteToggleBtn.textContent = isMuted ? '🔇' : '🔊';
-            // Disable slider if muted, enable if unmuted
-            volumeSlider.disabled = isMuted; 
-            // If unmuting, restore previous volume or default
-            if (!isMuted) {
-                // Set volume to slider value if unmuted
-                setVolume(parseFloat(volumeSlider.value)); 
-            } else {
-                // If muted, set volume to 0 (visually and audibly)
-                successSound.volume = 0;
-                failSound.volume = 0;
-            }
-        }
-
-        function setVolume(volume) {
-            successSound.volume = volume;
-            failSound.volume = volume;
-            // Ensure mute button icon reflects volume if volume slider is used
-            if (volume === 0 && !isMuted) {
-                muteToggleBtn.textContent = '🔇';
-                isMuted = true;
-            } else if (volume > 0 && isMuted) {
-                muteToggleBtn.textContent = '🔊';
-                isMuted = false;
-            }
-        }
-        // --- End New: Volume Control Functions ---
-
 
         // --- Event Listeners ---
         itemTypeSelect.addEventListener('change', updateCurrentItemStatus);
         itemLevelInput.addEventListener('change', updateCurrentItemStatus);
-        eventRateCheckbox.addEventListener('change', updateCurrentItemStatus); // Listen for event rate changes
         refineMaterialSelect.addEventListener('change', () => {
-            currentSuccessRateDisplay.textContent = getCalculatedSuccessRate(); // Update rate when material changes
+            currentSuccessRateDisplay.textContent = getCalculatedSuccessRate(); // Update success rate display immediately
         });
+        useBsbCheckbox.addEventListener('change', updateCurrentItemStatus); // Update status to potentially disable BSB
+        eventRateCheckbox.addEventListener('change', updateCurrentItemStatus); // Update material options and rate display
+
         refineOnceBtn.addEventListener('click', refineItem);
         resetItemBtn.addEventListener('click', resetItem);
 
-        // New: Volume Control Event Listeners
-        muteToggleBtn.addEventListener('click', toggleMute);
-        volumeSlider.addEventListener('input', (event) => {
-            setVolume(parseFloat(event.target.value));
-        });
-
         // Initial setup
         updateCurrentItemStatus();
-        // Set initial volume for audio elements based on slider
-        setVolume(parseFloat(volumeSlider.value));
 
     </script>
 </body>
