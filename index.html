@@ -179,6 +179,9 @@
         </div>
     </div>
 
+    <audio id="successSound" src="success.mp3" preload="auto"></audio>
+    <audio id="failSound" src="fail.mp3" preload="auto"></audio>
+
     <script>
         // 1. กำหนดตารางอัตราความสำเร็จ
         // แต่ละ itemKey (เช่น "Weapon_1") มี sub-object "normal" และ "cash"
@@ -378,6 +381,10 @@
         const currentStatusContainer = document.querySelector('.current-status');
         const currentSuccessRateDisplay = document.getElementById('currentSuccessRateDisplay');
 
+        // Audio Elements
+        const successSound = document.getElementById('successSound');
+        const failSound = document.getElementById('failSound');
+
         let currentRefineLevel = 0;
         let itemBroken = false;
         let totalAttempts = 0;
@@ -391,6 +398,17 @@
         };
 
         // --- Functions to manage UI and game state ---
+
+        // New function to play sound
+        function playSound(type) {
+            if (type === 'success') {
+                successSound.currentTime = 0; // Rewind to start if already playing
+                successSound.play();
+            } else if (type === 'fail') {
+                failSound.currentTime = 0; // Rewind to start if already playing
+                failSound.play();
+            }
+        }
 
         function logResult(message, type = "") {
             const p = document.createElement('p');
@@ -624,6 +642,7 @@
             if (rand < successRate) {
                 currentRefineLevel++;
                 logResult(`สำเร็จ! ไอเทมเป็น +${currentRefineLevel}`, "success");
+                playSound('success'); // Play success sound
             } else {
                 logResult(`ล้มเหลว!`, "fail");
                 // BSB protection logic
@@ -634,18 +653,18 @@
                     if (failEffectRaw === "destroy") {
                         logResult(`ไอเทมเสียหาย!`, "destroy");
                         itemBroken = true; // Mark item as broken
-                    } else if (failEffectRaw === "decrease_1") {
-                        currentRefineLevel = Math.max(0, currentRefineLevel - 1);
-                        logResult(`ระดับตีบวกลดลง 1 ขั้น เป็น +${currentRefineLevel}`, "decrease");
-                    } else if (failEffectRaw === "decrease_3") {
-                        currentRefineLevel = Math.max(0, currentRefineLevel - 3);
-                        logResult(`ระดับตีบวกลดลง 3 ขั้น เป็น +${currentRefineLevel}`, "decrease");
-                    } else if (failEffectRaw === "none") {
-                        logResult(`ไม่มีผลกระทบจากการล้มเหลว (ไอเทมคงอยู่ที่ +${currentRefineLevel})`, "log-item");
+                        playSound('fail'); // Play fail sound if item breaks
+                    } else if (failEffectRaw.startsWith("decrease_")) {
+                        const decreaseAmount = parseInt(failEffectRaw.split('_')[1]);
+                        currentRefineLevel = Math.max(0, currentRefineLevel - decreaseAmount);
+                        logResult(`ระดับตีบวกลดลงเหลือ +${currentRefineLevel}`, "decrease");
+                    } else {
+                        // Default behavior if failEffectRaw is 'none' or unrecognized
+                        logResult(`ไอเทมไม่เสียหาย แต่ระดับตีบวกไม่เปลี่ยนแปลง.`, "fail");
                     }
                 }
             }
-            updateCurrentItemStatus(); // Update UI after refine attempt
+            updateCurrentItemStatus();
         }
 
         function resetItem() {
@@ -653,34 +672,26 @@
             itemBroken = false;
             totalAttempts = 0;
             materialsUsed = {};
-            resultsLog.innerHTML = ''; // Clear log
-            logResult("รีเซ็ตไอเทมเรียบร้อยแล้ว! เริ่มต้นใหม่ที่ +0", "log-item");
-            updateCurrentItemStatus(); // Update UI
+            resultsLog.innerHTML = ''; // Clear logs
+            updateCurrentItemStatus();
+            logResult("รีเซ็ตไอเทมแล้ว. เริ่มการจำลองใหม่ได้เลย!", "");
         }
 
-        // Event Listeners
+        // --- Event Listeners ---
+        itemTypeSelect.addEventListener('change', updateCurrentItemStatus);
+        itemLevelInput.addEventListener('change', updateCurrentItemStatus);
+        refineMaterialSelect.addEventListener('change', () => {
+            currentSuccessRateDisplay.textContent = getCalculatedSuccessRate(); // Update success rate display immediately
+        });
+        useBsbCheckbox.addEventListener('change', updateCurrentItemStatus); // Update status to potentially disable BSB
+        eventRateCheckbox.addEventListener('change', updateCurrentItemStatus); // Update material options and rate display
+
         refineOnceBtn.addEventListener('click', refineItem);
         resetItemBtn.addEventListener('click', resetItem);
-        itemTypeSelect.addEventListener('change', () => {
-            currentRefineLevel = 0; // Reset refine level when item type changes
-            itemBroken = false; // Reset broken status
-            updateCurrentItemStatus();
-        });
-        itemLevelInput.addEventListener('change', () => {
-            currentRefineLevel = 0; // Reset refine level when item level changes
-            itemBroken = false; // Reset broken status
-            updateCurrentItemStatus();
-        });
-        refineMaterialSelect.addEventListener('change', () => {
-            currentSuccessRateDisplay.textContent = getCalculatedSuccessRate(); // Update success rate display
-        });
-        eventRateCheckbox.addEventListener('change', () => {
-            updateMaterialOptions(); // Re-populate materials to reflect rate changes
-            updateCurrentItemStatus(); // Update BSB disabled state
-        });
-        
+
         // Initial setup
         updateCurrentItemStatus();
+
     </script>
 </body>
 </html>
