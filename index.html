@@ -176,13 +176,14 @@
             <ul id="materialSummary">
             </ul>
             <p>รวมจำนวนครั้งที่พยายาม: <span id="totalAttempts">0</span> ครั้ง</p>
+            <p>รวม Zeny ที่ใช้: <span id="totalZenyUsed">0</span> Zeny</p>
         </div>
     </div>
 
     <audio id="successSound" src="success.mp3" preload="auto"></audio>
     <audio id="failSound" src="fail.mp3" preload="auto"></audio>
 
-     <script>
+    <script>
         // 1. กำหนดตารางอัตราความสำเร็จ
         const SUCCESS_RATES = {
             "Armor_1": {
@@ -298,10 +299,6 @@
                 }
             }
         };
-
-
-
-        
         // 2. กำหนด Zeny ที่ใช้ในการตีบวกสำหรับแต่ละประเภทและระดับไอเทม
         // ค่า Zeny สำหรับแต่ละครั้งที่ตีบวก
         const ZENY_COSTS = {
@@ -318,59 +315,65 @@
             }
         };
 
-        // 2. กำหนดกฎการตีบวกและวัสดุที่ใช้
-        // ทุกวัสดุจะถูกรวมอยู่ในลิสต์เดียวกัน แต่จะระบุช่วงที่สามารถใช้ได้และ fail_effect
+        // 3. กำหนดกฎการตีบวกและวัสดุที่ใช้
+        // เพิ่ม "zeny_cost" เข้าไปในแต่ละ material object
         const REFINE_MATERIALS = {
             "Weapon": {
                 1: [
-                    { material_id: "Phracon", name: "Phracon", fail_effect: "destroy", range: [0, 10] },
-                    { material_id: "Bradium", name: "Bradium", fail_effect: "destroy", range: [11, 19] },
-                    // Enriched Phracon ถูกลบออก
+                    { material_id: "Phracon", name: "Phracon", fail_effect: "destroy", range: [0, 10], zeny_cost: 50 },
+                    { material_id: "Bradium", name: "Bradium", fail_effect: "destroy", range: [11, 19], zeny_cost: 50 },
+                    { material_id: "Enriched Phracon", name: "Enriched Phracon", fail_effect: "destroy", range: [0, 10], zeny_cost: 50 },
+                    { material_id: "HD Phracon", name: "HD Phracon", fail_effect: "decrease_1", range: [7, 10], zeny_cost: 50 },
+                    { material_id: "HD Bradium", name: "HD Bradium", fail_effect: "decrease_1", range: [11, 19], zeny_cost: 50 },
                 ],
                 2: [
-                    { material_id: "Emveretarcon", name: "Emveretarcon", fail_effect: "destroy", range: [0, 10] },
-                    { material_id: "Bradium", name: "Bradium", fail_effect: "destroy", range: [11, 19] },
-                    // Enriched Emveretarcon ถูกลบออก
+                    { material_id: "Emveretarcon", name: "Emveretarcon", fail_effect: "destroy", range: [0, 10], zeny_cost: 200 },
+                    { material_id: "Bradium", name: "Bradium", fail_effect: "destroy", range: [11, 19], zeny_cost: 200 },
+                    { material_id: "Enriched Emveretarcon", name: "Enriched Emveretarcon", fail_effect: "destroy", range: [0, 10], zeny_cost: 200 },
+                    { material_id: "HD Emveretarcon", name: "HD Emveretarcon", fail_effect: "decrease_1", range: [7, 10], zeny_cost: 200 },
+                    { material_id: "HD Bradium", name: "HD Bradium", fail_effect: "decrease_1", range: [11, 19], zeny_cost: 200 },
                 ],
                 3: [
-                    { material_id: "Oridecon", name: "Oridecon", fail_effect: "destroy", range: [0, 10] },
-                    { material_id: "Bradium", name: "Bradium", fail_effect: "destroy", range: [11, 19] },
-                    { material_id: "Enriched Oridecon", name: "Enriched Oridecon", fail_effect: "destroy", range: [0, 10] },
-                    { material_id: "HD Oridecon", name: "HD Oridecon", fail_effect: "decrease_1", range: [7, 10] },
+                    { material_id: "Oridecon", name: "Oridecon", fail_effect: "destroy", range: [0, 10], zeny_cost: 5000 },
+                    { material_id: "Bradium", name: "Bradium", fail_effect: "destroy", range: [11, 19], zeny_cost: 5000 },
+                    { material_id: "Enriched Oridecon", name: "Enriched Oridecon", fail_effect: "destroy", range: [0, 10], zeny_cost: 5000 },
+                    { material_id: "HD Oridecon", name: "HD Oridecon", fail_effect: "decrease_1", range: [7, 10], zeny_cost: 5000 },
+                    { material_id: "HD Bradium", name: "HD Bradium", fail_effect: "decrease_1", range: [11, 19], zeny_cost: 5000 },
                 ],
                 4: [ // Same as Lv.3
-                    { material_id: "Oridecon", name: "Oridecon", fail_effect: "destroy", range: [0, 10] },
-                    { material_id: "Bradium", name: "Bradium", fail_effect: "destroy", range: [11, 19] },
-                    { material_id: "Enriched Oridecon", name: "Enriched Oridecon", fail_effect: "destroy", range: [0, 10] },
-                    { material_id: "HD Oridecon", name: "HD Oridecon", fail_effect: "decrease_1", range: [7, 10] },
+                    { material_id: "Oridecon", name: "Oridecon", fail_effect: "destroy", range: [0, 10], zeny_cost: 20000 },
+                    { material_id: "Bradium", name: "Bradium", fail_effect: "destroy", range: [11, 19], zeny: 20000 },
+                    { material_id: "Enriched Oridecon", name: "Enriched Oridecon", fail_effect: "destroy", range: [0, 10], zeny_cost: 20000 },
+                    { material_id: "HD Oridecon", name: "HD Oridecon", fail_effect: "decrease_1", range: [7, 10], zeny_cost: 20000 },
+                    { material_id: "HD Bradium", name: "HD Bradium", fail_effect: "decrease_1", range: [11, 19], zeny_cost: 20000 },
                 ],
                 5: [
-                    { material_id: "Etherdeocon", name: "Etherdeocon", fail_effect: "decrease_3", range: [0, 10] },
-                    { material_id: "Etel Bradium", name: "Etel Bradium", fail_effect: "destroy", range: [11, 19] },
-                    { material_id: "Enriched Etherdeocon", name: "Enriched Etherdeocon", fail_effect: "decrease_1", range: [0, 10] },
-                    { material_id: "HD Etherdeocon", name: "HD Etherdeocon", fail_effect: "destroy", range: [11, 14] },
-                    { material_id: "HD Etel Bradium", name: "HD Etel Bradium", fail_effect: "destroy", range: [11, 14] },
+                    { material_id: "Etherdeocon", name: "Etherdeocon", fail_effect: "decrease_3", range: [0, 10], zeny_cost: 50000 },
+                    { material_id: "Etel Bradium", name: "Etel Bradium", fail_effect: "destroy", range: [11, 19], zeny_cost: 50000 },
+                    { material_id: "Enriched Etherdeocon", name: "Enriched Etherdeocon", fail_effect: "decrease_1", range: [0, 10], zeny_cost: 50000 },
+                    { material_id: "HD Etherdeocon", name: "HD Etherdeocon", fail_effect: "destroy", range: [11, 14], zeny_cost: 50000 },
+                    { material_id: "HD Etel Bradium", name: "HD Etel Bradium", fail_effect: "destroy", range: [11, 14], zeny_cost: 50000 },
                 ]
             },
             "Armor": {
                 1: [
-                    { material_id: "Elunium", name: "Elunium", fail_effect: "destroy", range: [0, 10] },
-                    { material_id: "Carnium", name: "Carnium", fail_effect: "destroy", range: [11, 19] },
-                    { material_id: "Enriched Elunium", name: "Enriched Elunium", fail_effect: "destroy", range: [0, 10] },
-                    { material_id: "HD Elunium", name: "HD Elunium", fail_effect: "decrease_1", range: [7, 10] },
-                    { material_id: "HD Carnium", name: "HD Carnium", fail_effect: "destroy", range: [11, 19] },
+                    { material_id: "Elunium", name: "Elunium", fail_effect: "destroy", range: [0, 10], zeny_cost: 2000 },
+                    { material_id: "Carnium", name: "Carnium", fail_effect: "destroy", range: [11, 19], zeny_cost: 2000 },
+                    { material_id: "Enriched Elunium", name: "Enriched Elunium", fail_effect: "destroy", range: [0, 10], zeny_cost: 2000 },
+                    { material_id: "HD Elunium", name: "HD Elunium", fail_effect: "decrease_1", range: [7, 10], zeny_cost: 2000 },
+                    { material_id: "HD Carnium", name: "HD Carnium", fail_effect: "destroy", range: [11, 19], zeny_cost: 2000 },
                 ],
                 2: [
-                    { material_id: "Etherium", name: "Etherium", fail_effect: "decrease_3", range: [0, 10] },
-                    { material_id: "Etel Carnium", name: "Etel Carnium", fail_effect: "destroy", range: [11, 19] },
-                    { material_id: "Enriched Etherium", name: "Enriched Etherium", fail_effect: "decrease_1", range: [0, 10] },
-                    { material_id: "HD Etherium", name: "HD Etherium", fail_effect: "destroy", range: [11, 14] },
-                    { material_id: "HD Etel Carnium", name: "HD Etel Carnium", fail_effect: "destroy", range: [15, 19] },
+                    { material_id: "Etherium", name: "Etherium", fail_effect: "decrease_3", range: [0, 10], zeny_cost: 30000 },
+                    { material_id: "Etel Carnium", name: "Etel Carnium", fail_effect: "destroy", range: [11, 19], zeny_cost: 30000 },
+                    { material_id: "Enriched Etherium", name: "Enriched Etherium", fail_effect: "decrease_1", range: [0, 10], zeny_cost: 30000 },
+                    { material_id: "HD Etherium", name: "HD Etherium", fail_effect: "destroy", range: [11, 14], zeny_cost: 30000 },
+                    { material_id: "HD Etel Carnium", name: "HD Etel Carnium", fail_effect: "destroy", range: [15, 19], zeny_cost: 30000 },
                 ]
             }
         };
 
-        // 3. Blacksmith Blessing (BSB) Costs
+        // 4. Blacksmith Blessing (BSB) Costs (เหมือนเดิม)
         const BSB_COSTS = {
             "normal": { // ช่วงไม่มีกิจกรรม
                 7: 1, 
@@ -397,7 +400,7 @@
         const itemLevelInput = document.getElementById('itemLevel');
         const refineMaterialSelect = document.getElementById('refineMaterial');
         const useBsbCheckbox = document.getElementById('useBsb');
-        const eventRateCheckbox = document.getElementById('eventRateCheckbox'); // Checkbox for event rate
+        const eventRateCheckbox = document.getElementById('eventRateCheckbox');
         const refineOnceBtn = document.getElementById('refineOnceBtn');
         const resetItemBtn = document.getElementById('resetItemBtn');
         const resultsLog = document.getElementById('resultsLog');
@@ -405,6 +408,7 @@
         const itemStatusDisplay = document.getElementById('itemStatusDisplay');
         const totalAttemptsSpan = document.getElementById('totalAttempts');
         const materialSummaryList = document.getElementById('materialSummary');
+        const totalZenyUsedSpan = document.getElementById('totalZenyUsed'); // Added for Zeny
         const currentStatusContainer = document.querySelector('.current-status');
         const currentSuccessRateDisplay = document.getElementById('currentSuccessRateDisplay');
 
@@ -415,9 +419,8 @@
         let currentRefineLevel = 0;
         let itemBroken = false;
         let totalAttempts = 0;
-        let materialsUsed = {}; // Dictionary to store material counts
         let totalZenyUsed = 0; // Initialize total Zeny used
-        
+        let materialsUsed = {}; // Dictionary to store material counts (excluding Zeny)
 
         // Helper function for random number (similar to Python's random.random())
         const random = {
@@ -428,13 +431,12 @@
 
         // --- Functions to manage UI and game state ---
 
-        // New function to play sound
         function playSound(type) {
             if (type === 'success') {
-                successSound.currentTime = 0; // Rewind to start if already playing
+                successSound.currentTime = 0;
                 successSound.play();
             } else if (type === 'fail') {
-                failSound.currentTime = 0; // Rewind to start if already playing
+                failSound.currentTime = 0;
                 failSound.play();
             }
         }
@@ -446,8 +448,7 @@
             if (type) {
                 p.classList.add(`log-${type}`);
             }
-            resultsLog.prepend(p); // Add to top for easier viewing of latest
-            // Keep only last 100 logs to prevent performance issues
+            resultsLog.prepend(p);
             while (resultsLog.children.length > 100) {
                 resultsLog.removeChild(resultsLog.lastChild);
             }
@@ -455,7 +456,6 @@
 
         function updateMaterialSummary() {
             materialSummaryList.innerHTML = '';
-            // Sort materials by name for consistent display
             const sortedMaterials = Object.keys(materialsUsed).sort();
             for (const material of sortedMaterials) {
                 if (materialsUsed[material] > 0) {
@@ -464,28 +464,26 @@
                     materialSummaryList.appendChild(li);
                 }
             }
+            totalZenyUsedSpan.textContent = totalZenyUsed.toLocaleString(); // Format Zeny with commas
         }
 
         function getCalculatedSuccessRate() {
             const itemType = itemTypeSelect.value;
             const itemLevel = parseInt(itemLevelInput.value);
             const selectedMaterialValue = refineMaterialSelect.value;
-            const useEventRate = eventRateCheckbox.checked; // Get state of event rate checkbox
+            const useEventRate = eventRateCheckbox.checked;
 
             if (!selectedMaterialValue) {
-                return "N/A"; // No material selected
+                return "N/A";
             }
 
-            // materialDisplayName is now stored directly as the value
-            const [materialId, failEffectRaw, materialDisplayName, materialRangeStart, materialRangeEnd] = selectedMaterialValue.split('|');
+            const [materialId, failEffectRaw, materialDisplayName, materialRangeStart, materialRangeEnd, zenyCost] = selectedMaterialValue.split('|');
             
             const refineLevelToAttempt = currentRefineLevel;
             const itemKey = `${itemType}_${itemLevel}`;
             
-            // Determine which rate set to use based on eventRateCheckbox
             const rateSet = useEventRate ? "cash" : "normal";
             
-            // Get the success rate for the specific material and refine level from the chosen rateSet
             const ratesForMaterial = SUCCESS_RATES[itemKey]?.[rateSet]?.[materialId];
             const successRate = ratesForMaterial ? ratesForMaterial[refineLevelToAttempt] : undefined;
             
@@ -497,29 +495,25 @@
             if (itemBroken) {
                 itemStatusDisplay.textContent = 'เสียหาย!';
                 currentStatusContainer.classList.add('broken');
-                refineOnceBtn.disabled = true; // Disable refine if broken
+                refineOnceBtn.disabled = true;
                 refineMaterialSelect.disabled = true;
                 useBsbCheckbox.disabled = true;
-                eventRateCheckbox.disabled = true; // Disable event rate checkbox if broken
+                eventRateCheckbox.disabled = true;
             } else {
                 itemStatusDisplay.textContent = 'ปกติ';
                 currentStatusContainer.classList.remove('broken');
                 refineOnceBtn.disabled = false;
                 refineMaterialSelect.disabled = false;
-                // --- Start: BSB Checkbox specific logic ---
-                // Disable BSB checkbox if currentRefineLevel is less than 7
                 useBsbCheckbox.disabled = (currentRefineLevel < 7);
-                // If BSB checkbox is disabled, uncheck it to prevent accidental use
                 if (useBsbCheckbox.disabled) {
                     useBsbCheckbox.checked = false;
                 }
-                // --- End: BSB Checkbox specific logic ---
-                eventRateCheckbox.disabled = false; // Enable event rate checkbox if not broken
+                eventRateCheckbox.disabled = false;
             }
             totalAttemptsSpan.textContent = totalAttempts;
             updateMaterialSummary();
-            updateMaterialOptions(true); // Call with true to try and preserve selection
-            currentSuccessRateDisplay.textContent = getCalculatedSuccessRate(); // Update success rate display
+            updateMaterialOptions(true);
+            currentSuccessRateDisplay.textContent = getCalculatedSuccessRate();
         }
 
         function updateMaterialOptions(preserveSelection = false) {
@@ -529,9 +523,9 @@
             const itemKey = `${itemType}_${itemLevel}`;
             
             const availableMaterials = REFINE_MATERIALS[itemType] ? REFINE_MATERIALS[itemType][itemLevel] : [];
-            const previousSelection = refineMaterialSelect.value; // Store previous selection
+            const previousSelection = refineMaterialSelect.value;
             
-            refineMaterialSelect.innerHTML = ''; // Clear previous options
+            refineMaterialSelect.innerHTML = '';
 
             if (itemBroken) {
                 const option = document.createElement('option');
@@ -559,25 +553,23 @@
             let foundPreviousSelection = false;
             let firstValidMaterialValue = '';
 
-            // Populate select with available materials that are valid for current refine level
             availableMaterials.forEach(material => {
                 const materialId = material.material_id;
                 const materialDisplayName = material.name;
                 const failEffect = material.fail_effect;
                 const rangeStart = material.range[0];
                 const rangeEnd = material.range[1];
+                const zenyCost = material.zeny_cost; // Get Zeny cost from material
 
-                // Check if the current refine level is within the material's valid range
                 if (currentRefineLevel >= rangeStart && currentRefineLevel <= rangeEnd) {
                     const rateSet = useEventRate ? "cash" : "normal";
                     const successRate = SUCCESS_RATES[itemKey]?.[rateSet]?.[materialId]?.[currentRefineLevel];
                     
-                    if (successRate !== undefined) { // Only show materials with a defined rate for current level and selected rateSet
+                    if (successRate !== undefined) {
                         const option = document.createElement('option');
-                        // Store material_id, fail_effect, name, range_start, range_end in value for easy retrieval
-                        const optionValue = `${materialId}|${failEffect}|${materialDisplayName}|${rangeStart}|${rangeEnd}`;
+                        const optionValue = `${materialId}|${failEffect}|${materialDisplayName}|${rangeStart}|${rangeEnd}|${zenyCost}`; // Add zeny_cost
                         option.value = optionValue;
-                        option.textContent = `${materialDisplayName} (เรท ${successRate}%)`; // Display rate in option
+                        option.textContent = `${materialDisplayName} (เรท ${successRate}%)`;
                         refineMaterialSelect.appendChild(option);
                         hasValidMaterial = true;
 
@@ -593,7 +585,6 @@
                 }
             });
 
-            // If no valid materials for current level and rate set, disable button and clear rate
             if (!hasValidMaterial) {
                 const option = document.createElement('option');
                 option.value = '';
@@ -605,7 +596,7 @@
                 if (preserveSelection && foundPreviousSelection) {
                     // Already selected
                 } else if (firstValidMaterialValue) {
-                    refineMaterialSelect.value = firstValidMaterialValue; // Select the first valid option
+                    refineMaterialSelect.value = firstValidMaterialValue;
                 }
             }
             currentSuccessRateDisplay.textContent = getCalculatedSuccessRate();
@@ -621,19 +612,19 @@
             const itemLevel = parseInt(itemLevelInput.value);
             const selectedMaterialValue = refineMaterialSelect.value;
             const useBsb = useBsbCheckbox.checked;
-            const useEventRate = eventRateCheckbox.checked; // Get state of event rate checkbox
+            const useEventRate = eventRateCheckbox.checked;
 
             if (!selectedMaterialValue) {
                 logResult("กรุณาเลือกวัสดุสำหรับตีบวก.", "fail");
                 return;
             }
 
-            const [materialId, failEffectRaw, materialDisplayName, materialRangeStart, materialRangeEnd] = selectedMaterialValue.split('|');
-            
+            const [materialId, failEffectRaw, materialDisplayName, materialRangeStart, materialRangeEnd, zenyCostStr] = selectedMaterialValue.split('|');
+            const zenyCost = parseInt(zenyCostStr); // Parse Zeny cost
+
             const refineLevelToAttempt = currentRefineLevel;
             const itemKey = `${itemType}_${itemLevel}`;
             
-            // Determine which rate set to use based on eventRateCheckbox
             const rateSet = useEventRate ? "cash" : "normal";
             const successRate = SUCCESS_RATES[itemKey]?.[rateSet]?.[materialId]?.[refineLevelToAttempt];
 
@@ -642,89 +633,112 @@
                 return;
             }
             
-            // Check if selected material is valid for the current refine level before proceeding
             if (refineLevelToAttempt < parseInt(materialRangeStart) || refineLevelToAttempt > parseInt(materialRangeEnd)) {
                 logResult(`Error: วัสดุ ${materialDisplayName} ไม่สามารถใช้ตีบวกที่ระดับ +${refineLevelToAttempt} ได้. ช่วงที่รองรับคือ +${materialRangeStart} ถึง +${materialRangeEnd}.`, "fail");
                 return;
             }
 
-            // Track material usage
-            materialsUsed[materialDisplayName] = (materialsUsed[materialDisplayName] || 0) + 1;
+            // Increment total attempts and Zeny used
             totalAttempts++;
+            totalZenyUsed += zenyCost;
+
+            // Log material usage
+            materialsUsed[materialDisplayName] = (materialsUsed[materialDisplayName] || 0) + 1;
 
             let bsbUsed = 0;
-            // Use selected rate group (normal/cash) to get BSB cost
-            const bsbCost = BSB_COSTS[rateSet] ? BSB_COSTS[rateSet][refineLevelToAttempt] : 0;
-
-            if (useBsb && bsbCost > 0) {
-                bsbUsed = bsbCost;
-                materialsUsed["Blacksmith Blessing"] = (materialsUsed["Blacksmith Blessing"] || 0) + bsbUsed;
-                logResult(`ใช้ Blacksmith Blessing ${bsbUsed} ชิ้น`);
-            } else if (useBsb && bsbCost === 0 && refineLevelToAttempt >=7 && refineLevelToAttempt <= 13) {
-                logResult(`Warning: Blacksmith Blessing ไม่รองรับระดับ +${refineLevelToAttempt} ด้วยเรท ${rateSet} หรือไม่มีข้อมูล.`, "fail");
+            if (useBsb && currentRefineLevel >= 7) {
+                const bsbAmount = BSB_COSTS[rateSet]?.[currentRefineLevel];
+                if (bsbAmount !== undefined) {
+                    bsbUsed = bsbAmount;
+                    materialsUsed["Blacksmith's Blessing"] = (materialsUsed["Blacksmith's Blessing"] || 0) + bsbUsed;
+                } else {
+                    logResult(`คำเตือน: ไม่พบจำนวน BSB สำหรับระดับ +${currentRefineLevel} ในเรท ${rateSet}.`, "warning");
+                }
             }
 
-            const rand = random.random() * 100; // Generate a random number between 0 and 99.99...
-
-            logResult(`พยายามตีบวก ${itemType} Lv.${itemLevel} จาก +${refineLevelToAttempt} เป็น +${refineLevelToAttempt + 1} (ใช้ ${materialDisplayName}, เรท: ${rateSet === 'cash' ? 'กิจกรรม' : 'ปกติ'}) - โอกาสสำเร็จ: ${successRate}%`);
-
-            if (rand < successRate) {
+            // Simulate the refine attempt
+            const randomNumber = random.random() * 100; // 0 to 99.999...
+            
+            if (randomNumber < successRate) {
+                // Success
                 currentRefineLevel++;
-                logResult(`สำเร็จ! ไอเทมเป็น +${currentRefineLevel}`, "success");
-                playSound('success'); // Play success sound
+                logResult(`สำเร็จ! ไอเทมถูกตีบวกเป็น +${currentRefineLevel} (ใช้ ${materialDisplayName} ${bsbUsed > 0 ? `+ BSB ${bsbUsed} อัน` : ''} และ ${zenyCost.toLocaleString()} Zeny)`, "success");
+                playSound('success');
             } else {
-                logResult(`ล้มเหลว!`, "fail");
-                // BSB protection logic
-                if (useBsb && bsbCost > 0 && refineLevelToAttempt >= 7 && refineLevelToAttempt <= 13) {
-                    logResult(`Blacksmith Blessing ป้องกันไอเทมไว้ได้! ไอเทมคงอยู่ที่ +${currentRefineLevel}`, "log-item");
+                // Fail
+                playSound('fail');
+                let outcomeMessage = `ล้มเหลวที่ +${currentRefineLevel + 1} (ใช้ ${materialDisplayName} ${bsbUsed > 0 ? `+ BSB ${bsbUsed} อัน` : ''} และ ${zenyCost.toLocaleString()} Zeny)`;
+                let logType = "fail";
+
+                if (useBsb && currentRefineLevel >= 7) {
+                    logResult(`${outcomeMessage} - BSB ป้องกันการแตก! ระดับยังคงอยู่ที่ +${currentRefineLevel}.`, "fail");
                 } else {
-                    // Apply normal failure effect based on failEffectRaw
-                    if (failEffectRaw === "destroy") {
-                        logResult(`ไอเทมเสียหาย!`, "destroy");
-                        itemBroken = true; // Mark item as broken
-                        playSound('fail'); // Play fail sound if item breaks
-                    } else if (failEffectRaw.startsWith("decrease_")) {
-                        const decreaseAmount = parseInt(failEffectRaw.split('_')[1]);
-                        currentRefineLevel = Math.max(0, currentRefineLevel - decreaseAmount);
-                        logResult(`ระดับตีบวกลดลงเหลือ +${currentRefineLevel}`, "decrease");
-                    } else {
-                        // Default behavior if failEffectRaw is 'none' or unrecognized
-                        logResult(`ไอเทมไม่เสียหาย แต่ระดับตีบวกไม่เปลี่ยนแปลง.`, "fail");
+                    // Determine fail effect based on the material's fail_effect property
+                    const failEffectRule = REFINE_MATERIALS[itemType][itemLevel].find(m => m.material_id === materialId)?.fail_effect || "destroy"; // Default to destroy if not found
+
+                    switch (failEffectRule) {
+                        case "destroy":
+                            itemBroken = true;
+                            currentRefineLevel = 0; // Reset level on destruction
+                            outcomeMessage += " - ไอเทมเสียหาย!";
+                            logType = "destroy";
+                            break;
+                        case "decrease_1":
+                            currentRefineLevel = Math.max(0, currentRefineLevel - 1);
+                            outcomeMessage += ` - ระดับลดลงเหลือ +${currentRefineLevel}.`;
+                            logType = "decrease";
+                            break;
+                        case "decrease_3":
+                            currentRefineLevel = Math.max(0, currentRefineLevel - 3);
+                            outcomeMessage += ` - ระดับลดลงเหลือ +${currentRefineLevel}.`;
+                            logType = "decrease";
+                            break;
+                        default:
+                            itemBroken = true;
+                            currentRefineLevel = 0;
+                            outcomeMessage += " - ไอเทมเสียหาย (ไม่รู้จักผลลัพธ์การล้มเหลว)!";
+                            logType = "destroy";
+                            break;
                     }
+                    logResult(outcomeMessage, logType);
                 }
             }
             updateCurrentItemStatus();
         }
 
-        function getRefineCost(itemType, itemLevel) {
-            return ZENY_COSTS[itemType][itemLevel] || 0;
-        }
-        
         function resetItem() {
             currentRefineLevel = 0;
             itemBroken = false;
             totalAttempts = 0;
+            totalZenyUsed = 0;
             materialsUsed = {};
-            resultsLog.innerHTML = ''; // Clear logs
-            updateCurrentItemStatus();
-            logResult("รีเซ็ตไอเทมแล้ว. เริ่มการจำลองใหม่ได้เลย!", "");
+            resultsLog.innerHTML = ''; // Clear log
+            itemTypeSelect.value = 'Weapon'; // Reset to default
+            itemLevelInput.value = '1'; // Reset to default
+            useBsbCheckbox.checked = true; // Reset BSB to default
+            eventRateCheckbox.checked = false; // Reset event rate to default
+            updateCurrentItemStatus(); // Update UI
         }
 
         // --- Event Listeners ---
         itemTypeSelect.addEventListener('change', updateCurrentItemStatus);
         itemLevelInput.addEventListener('change', updateCurrentItemStatus);
+        eventRateCheckbox.addEventListener('change', updateCurrentItemStatus); // Update when event rate changes
         refineMaterialSelect.addEventListener('change', () => {
-            currentSuccessRateDisplay.textContent = getCalculatedSuccessRate(); // Update success rate display immediately
+            currentSuccessRateDisplay.textContent = getCalculatedSuccessRate(); // Update success rate when material changes
         });
-        useBsbCheckbox.addEventListener('change', updateCurrentItemStatus); // Update status to potentially disable BSB
-        eventRateCheckbox.addEventListener('change', updateCurrentItemStatus); // Update material options and rate display
-
         refineOnceBtn.addEventListener('click', refineItem);
         resetItemBtn.addEventListener('click', resetItem);
+        useBsbCheckbox.addEventListener('change', () => {
+            // Re-evaluate material options (especially if BSB changes affects what's displayed, though not currently)
+            // More importantly, it helps keep the UI state consistent with BSB usage rules
+            updateCurrentItemStatus(); 
+        });
 
         // Initial setup
-        updateCurrentItemStatus();
-
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCurrentItemStatus();
+        });
     </script>
 </body>
 </html>
