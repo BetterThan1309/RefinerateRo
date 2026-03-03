@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
             background-color: #f4f4f4;
             color: #333;
         }
+
         .container {
             background-color: #fff;
             padding: 30px;
@@ -19,11 +21,13 @@
             max-width: 900px;
             margin: auto;
         }
+
         h1 {
             color: #0056b3;
             text-align: center;
             margin-bottom: 30px;
         }
+
         .controls {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -31,18 +35,22 @@
             margin-bottom: 25px;
             align-items: center;
         }
+
         .controls label {
             font-weight: bold;
             margin-bottom: 5px;
             display: block;
         }
-        .controls select, .controls input[type="number"] {
+
+        .controls select,
+        .controls input[type="number"] {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
             box-sizing: border-box;
         }
+
         .current-status {
             font-size: 1.2em;
             font-weight: bold;
@@ -53,15 +61,19 @@
             border-radius: 5px;
             border: 1px solid #b2ebf2;
         }
+
         .current-status.broken {
             background-color: #ffe0b2;
             border-color: #ffcc80;
             color: darkred;
         }
+
         .btn-group {
-            grid-column: 1 / -1; /* Span all columns */
+            grid-column: 1 / -1;
+            /* Span all columns */
             text-align: center;
         }
+
         button {
             background-color: #28a745;
             color: white;
@@ -73,16 +85,20 @@
             margin: 5px;
             min-width: 120px;
         }
+
         button.reset-btn {
             background-color: #dc3545;
         }
+
         button:hover:not(:disabled) {
             opacity: 0.9;
         }
+
         button:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
         }
+
         .results {
             background-color: #e9ecef;
             border: 1px solid #ced4da;
@@ -93,6 +109,7 @@
             overflow-y: auto;
             margin-top: 20px;
         }
+
         .summary {
             margin-top: 20px;
             padding: 15px;
@@ -101,29 +118,47 @@
             border-radius: 5px;
             font-weight: bold;
         }
+
         .log-item {
             margin-bottom: 5px;
         }
-        .log-success { color: green; }
-        .log-fail { color: red; }
-        .log-destroy { color: darkred; font-weight: bold; }
-        .log-decrease { color: orange; }
+
+        .log-success {
+            color: green;
+        }
+
+        .log-fail {
+            color: red;
+        }
+
+        .log-destroy {
+            color: darkred;
+            font-weight: bold;
+        }
+
+        .log-decrease {
+            color: orange;
+        }
+
         .checkbox-container {
             display: flex;
             align-items: center;
             gap: 10px;
             margin-top: 10px;
         }
+
         /* New style for success rate display */
         .success-rate-display {
             font-size: 1.1em;
             font-weight: bold;
-            color: #007bff; /* Blue color for emphasis */
+            color: #007bff;
+            /* Blue color for emphasis */
             margin-top: 10px;
             text-align: center;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>RO Refine Simulator</h1>
@@ -183,134 +218,92 @@
     <audio id="successSound" src="success.mp3" preload="auto"></audio>
     <audio id="failSound" src="fail.mp3" preload="auto"></audio>
 
-   <script>
+    <script>
         // 1. กำหนดตารางอัตราความสำเร็จ (เหมือนเดิม)
+
         const SUCCESS_RATES = {
-            "Armor_1": {
-                "normal": { // อัตราปกติ (จากภาพ)
-                    "Elunium": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 60, 5: 40, 6: 40, 7: 20, 8: 20, 9: 9, 10: 8 },
-                    "Carnium": { 11: 8, 12: 8, 13: 8 ,14: 7, 15: 7, 16: 7, 17: 7, 18: 5, 19: 5 },
-                    "Enriched Elunium": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 80, 5: 60, 6: 60, 7: 40, 8: 40, 9: 20, 10: 20 },
-                    "HD Elunium": { 7: 40, 8: 40, 9: 20, 10: 20 },
-                    "HD Carnium": { 11: 16, 12: 16, 13: 16, 14: 15, 15: 15, 16: 14, 17: 14, 18: 14, 19: 10 },
-                },
-                "cash": { // อัตรากิจกรรม (จากภาพ)
-                    "Elunium": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 60, 6: 40, 7: 40, 8: 20, 9: 20, 10: 9 },
-                    "Carnium": { 11: 20, 12: 20, 13: 16, 14: 15, 15: 15, 16: 15, 17: 14, 18: 14, 19: 10 },
-                    "Enriched Elunium": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 95, 6: 85, 7: 70, 8: 70, 9: 55, 10: 45 },
-                    "HD Elunium": { 7: 70, 8: 70, 9: 55, 10: 45 },
-                    "HD Carnium": { 11: 35, 12: 35, 13: 30, 14: 30, 15: 30, 16: 20, 17: 20, 18: 20, 19: 10 },
-                }
-            },
-            "Armor_2": {
-                "normal": {
-                    "Etherium": { 0: 100, 1: 100, 2: 100, 3: 80, 4: 80, 5: 60, 6: 60, 7: 40, 8: 40, 9: 18, 10: 16 },
-                    "Etel Carnium": { 11: 16, 12: 16, 13: 16, 14: 14, 15: 14, 16: 14, 17: 14, 18: 10, 19: 10},
-                    "Enriched Etherium": { 0: 100, 1: 100, 2: 100, 3: 90, 4: 70, 5: 60, 6: 60, 7: 40, 8: 40, 9: 20, 10: 15 },
-                    "HD Etherium": { 7: 44, 8: 40, 9: 20, 10: 15 },
-                    "HD Etel Carnium": { 11: 15, 12: 15, 13: 15, 14: 10, 15: 10, 16: 10, 17: 10, 18: 7, 19: 7 },
-                },
-                "cash": {
-                    "Etherium": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 95, 6: 85, 7: 70, 8: 70, 9: 55, 10: 45 },
-                    "Etel Carnium": { 11: 35, 12: 35, 13: 30, 14: 30, 15: 30, 16: 20, 17: 20, 18: 20, 19: 10 },
-                    "Enriched Etherium": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 95, 6: 85, 7: 70, 8: 70, 9: 55, 10: 45 },
-                    "HD Etherium": { 7: 70, 8: 70, 9: 55, 10: 45 },
-                    "HD Etel Carnium": { 11: 35, 12: 35, 13: 30, 14: 30, 15: 30, 16: 20, 17: 20, 18: 20, 19: 10 },
-                }
-            },
+
             "Weapon_1": {
-                "normal": { // อัตราปกติ (จากภาพ)
-                    "Phracon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 100, 6: 100, 7: 60, 8: 40, 9: 19, 10: 18 },
-                    "Bradium": { 11: 18, 12: 18, 13: 18, 14: 18, 15: 17, 16: 17, 17: 17, 18: 15, 19: 15 },
-                    "Enriched Phracon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 100, 6: 100, 7: 90, 8: 70, 9: 30, 10: 18 }, // เพิ่มจากภาพ แต่ตามหลักน่าจะมี
-                    "HD Phracon": { 7: 40, 8: 40, 9: 20, 10: 20 }, // เพิ่มจากภาพ แต่ตามหลักน่าจะมี
-                    "HD Bradium": { 11: 18, 12: 18, 13: 18, 14: 18, 15: 17, 16: 17, 17: 17, 18: 15, 19: 15 }, // เพิ่มจากภาพ แต่ตามหลักน่าจะมี
+                normal: {
+                    "Phracon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 100, 6: 100, 7: 100, 8: 60, 9: 40, 10: 19 },
+                    "Bradium": { 11: 40, 12: 40, 13: 35, 14: 35, 15: 30, 16: 30, 17: 20, 18: 20, 19: 15, 20: 15 }
                 },
-                "cash": { // อัตรากิจกรรม (จากภาพ)
-                    "Phracon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 95, 6: 85, 7: 70, 8: 70, 9: 55, 10: 45 },
-                    "Bradium": { 11: 35, 12: 35, 13: 30, 14: 30, 15: 30, 16: 20, 17: 20, 18: 20, 19: 10 },
-                    "Enriched Phracon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 95, 6: 85, 7: 70, 8: 70, 9: 55, 10: 45 }, // เพิ่มจากภาพ แต่ตามหลักน่าจะมี
-                    "HD Phracon": { 7: 70, 8: 70, 9: 55, 10: 45 }, // เพิ่มจากภาพ แต่ตามหลักน่าจะมี
-                    "HD Bradium": { 11: 35, 12: 35, 13: 30, 14: 30, 15: 30, 16: 20, 17: 20, 18: 20, 19: 10 }, // เพิ่มจากภาพ แต่ตามหลักน่าจะมี
+                cash: {
+                    "Phracon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 100, 6: 100, 7: 100, 8: 95, 9: 85, 10: 55 },
+                    "Bradium": { 11: 40, 12: 40, 13: 35, 14: 35, 15: 30, 16: 30, 17: 20, 18: 20, 19: 15, 20: 15 }
                 }
             },
+
             "Weapon_2": {
-                "normal": { // อัตราปกติ (จากภาพ)
-                    "Emveretarcon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 100, 6: 60, 7: 40, 8: 20, 9: 19, 10: 18 },
-                    "Bradium": { 11: 18, 12: 18, 13: 18, 14: 18, 15: 17, 16: 17, 17: 17, 18: 15, 19: 15 },
-                    "Enriched Emveretarcon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 100, 6: 60, 7: 40, 8: 20, 9: 19, 10: 18 }, // เพิ่มจากภาพ แต่ตามหลักน่าจะมี
-                    "HD Emveretarcon": { 7: 40, 8: 40, 9: 20, 10: 20 }, // เพิ่มจากภาพ แต่ตามหลักน่าจะมี
+                normal: {
+                    "Emveretarcon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 100, 6: 100, 7: 60, 8: 50, 9: 40, 10: 19 },
+                    "Bradium": { 11: 40, 12: 40, 13: 35, 14: 35, 15: 30, 16: 30, 17: 20, 18: 20, 19: 15, 20: 15 }
                 },
-                "cash": { // อัตรากิจกรรม (จากภาพ)
-                    "Emveretarcon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 95, 6: 85, 7: 70, 8: 70, 9: 55, 10: 45 },
-                    "Bradium": { 11: 35, 12: 35, 13: 30, 14: 30, 15: 30, 16: 20, 17: 20, 18: 20, 19: 10 },
-                    "Enriched Emveretarcon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 95, 6: 85, 7: 70, 8: 70, 9: 55, 10: 45 }, // เพิ่มจากภาพ แต่ตามหลักน่าจะมี
-                    "HD Emveretarcon": { 7: 70, 8: 70, 9: 55, 10: 45 }, // เพิ่มจากภาพ แต่ตามหลักน่าจะมี
+                cash: {
+                    "Emveretarcon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 100, 6: 100, 7: 95, 8: 85, 9: 60, 10: 45 },
+                    "Bradium": { 11: 40, 12: 40, 13: 35, 14: 35, 15: 30, 16: 30, 17: 20, 18: 20, 19: 15, 20: 15 }
                 }
             },
+
             "Weapon_3": {
-                "normal": { // อัตราปกติ (จากภาพ)
-                    "Oridecon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 60, 6: 50, 7: 20, 8: 20, 9: 19, 10: 18 },
-                    "Bradium": { 11: 18, 12: 18, 13: 18, 14: 17, 15: 17, 16: 17, 17: 17, 18: 15, 19: 15 },
-                    "Enriched Oridecon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 80, 5: 60, 6: 60, 7: 40, 8: 40, 9: 20, 10: 20 },
-                    "HD Oridecon": { 7: 40, 8: 40, 9: 20, 10: 20 },
-                    "HD Bradium": { 11: 16, 12: 16, 13: 16, 14: 15, 15: 15, 16: 14, 17: 14, 18: 14, 19: 10 }, // เพิ่มจากภาพ แต่ตามหลักน่าจะมี
+                normal: {
+                    "Oridecon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 100, 6: 60, 7: 50, 8: 20, 9: 20, 10: 19 },
+                    "Bradium": { 11: 40, 12: 40, 13: 35, 14: 35, 15: 30, 16: 30, 17: 20, 18: 20, 19: 15, 20: 15 }
                 },
-                "cash": { // อัตรากิจกรรม (จากภาพ)
-                    "Oridecon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 95, 6: 85, 7: 70, 8: 70, 9: 55, 10: 45 },
-                    "Bradium": { 11: 35, 12: 35, 13: 30, 14: 30, 15: 30, 16: 20, 17: 20, 18: 20, 19: 10 },
-                    "Enriched Oridecon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 95, 6: 85, 7: 70, 8: 70, 9: 55, 10: 45 },
-                    "HD Oridecon": { 7: 70, 8: 70, 9: 55, 10: 45 },
-                    "HD Bradium": { 11: 35, 12: 35, 13: 30, 14: 30, 15: 30, 16: 20, 17: 20, 18: 20, 19: 10 }, // เพิ่มจากภาพ แต่ตามหลักน่าจะมี
+                cash: {
+                    "Oridecon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 100, 6: 100, 7: 95, 8: 90, 9: 70, 10: 50 },
+                    "Bradium": { 11: 40, 12: 40, 13: 35, 14: 35, 15: 30, 16: 30, 17: 20, 18: 20, 19: 15, 20: 15 }
                 }
             },
+
             "Weapon_4": {
-                "normal": { // อัตราปกติ (จากภาพ)
-                    "Oridecon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 60, 5: 40, 6: 40, 7: 20, 8: 20, 9: 9, 10: 8 },
-                    "Bradium": { 11: 8, 12: 8, 13: 8, 14: 7, 15: 7, 16: 7, 17: 7, 18: 5, 19: 5 },
-                    "Enriched Oridecon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 90, 5: 70, 6: 70, 7: 40, 8: 40, 9: 20, 10: 8 },
-                    "HD Oridecon": { 7: 40, 8: 40, 9: 20, 10: 8 },
-                    "HD Bradium": { 11: 8, 12: 8, 13: 8, 14: 7, 15: 7, 16: 7, 17: 7, 18: 5, 19: 5 }, // เพิ่มจากภาพ แต่ตามหลักน่าจะมี
+                normal: {
+                    "Oridecon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 60, 6: 40, 7: 40, 8: 20, 9: 20, 10: 9 },
+                    "Bradium": { 11: 20, 12: 20, 13: 16, 14: 16, 15: 15, 16: 15, 17: 14, 18: 14, 19: 10, 20: 10 }
                 },
-                "cash": { // อัตรากิจกรรม (จากภาพ)
-                    "Oridecon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 95, 6: 85, 7: 70, 8: 70, 9: 55, 10: 45 },
-                    "Bradium": { 11: 35, 12: 35, 13: 30, 14: 30, 15: 30, 16: 20, 17: 20, 18: 20, 19: 10 },
-                    "Enriched Oridecon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 95, 6: 85, 7: 70, 8: 70, 9: 55, 10: 45 },
-                    "HD Oridecon": { 7: 70, 8: 70, 9: 55, 10: 45 },
-                    "HD Bradium": { 11: 35, 12: 35, 13: 30, 14: 30, 15: 30, 16: 20, 17: 20, 18: 20, 19: 10 }, // เพิ่มจากภาพ แต่ตามหลักน่าจะมี
+                cash: {
+                    "Oridecon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 100, 6: 95, 7: 80, 8: 80, 9: 60, 10: 50 },
+                    "Bradium": { 11: 20, 12: 20, 13: 16, 14: 16, 15: 15, 16: 15, 17: 14, 18: 14, 19: 10, 20: 10 }
                 }
             },
+
             "Weapon_5": {
-                "normal": {
-                    "Etherdeocon": { 0: 100, 1: 100, 2: 100, 3: 60, 4: 60, 5: 40, 6: 40, 7: 20, 8: 20, 9: 9, 10: 8 },
-                    "Etel Bradium": { 11: 8, 12: 8, 13: 8, 14: 7, 15: 7, 16: 7, 17: 7, 18: 5, 19: 5 },
-                    "Enriched Etherdeocon": { 0: 100, 1: 100, 2: 100, 3: 90, 4: 70, 5: 60, 6: 60, 7: 40, 8: 40, 9: 20, 10: 15 },
-                    "HD Etherdeocon": { 7: 40, 8: 40, 9: 20, 10: 20 }, // อัตราจากภาพ HD Etherdeocon เริ่มที่ 7
-                    "HD Etel Bradium": { 11: 15, 12: 15, 13: 15, 14: 10, 15: 10, 16: 10, 17: 10, 18: 7, 19: 7 }, // อัตราจากภาพ HD Etel Bradium เริ่มที่ 11
+                normal: {
+                    "Etherdeocon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 80, 5: 80, 6: 60, 7: 60, 8: 40, 9: 40, 10: 18 },
+                    "Enriched Etherdeocon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 95, 5: 85, 6: 70, 7: 65, 8: 55, 9: 45, 10: 25 },
+                    "Etel Bradium": { 11: 16, 12: 16, 13: 16, 14: 16, 15: 14, 16: 14, 17: 14, 18: 14, 19: 10, 20: 10 }
                 },
-                "cash": {
-                    "Etherdeocon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 95, 5: 85, 6: 85, 7: 70, 8: 70, 9: 55, 10: 45 },
-                    "Etel Bradium": { 11: 35, 12: 35, 13: 30, 14: 30, 15: 30, 16: 20, 17: 20, 18: 20, 19: 10 },
-                    "Enriched Etherdeocon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 95, 5: 85, 6: 85, 7: 70, 8: 70, 9: 55, 10: 45 },
-                    "HD Etherdeocon": { 7: 70, 8: 70, 9: 55, 10: 45 }, // อัตราจากภาพ HD Etherdeocon เริ่มที่ 7
-                    "HD Etel Bradium": { 11: 35, 12: 35, 13: 30, 14: 30, 15: 30, 16: 20, 17: 20, 18: 20, 19: 10 }, // อัตราจากภาพ HD Etel Bradium เริ่มที่ 11
+                cash: {
+                    "Etherdeocon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 95, 6: 85, 7: 70, 8: 65, 9: 55, 10: 45 },
+                    "Enriched Etherdeocon": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 95, 6: 85, 7: 70, 8: 65, 9: 55, 10: 45 },
+                    "Etel Bradium": { 11: 20, 12: 20, 13: 20, 14: 20, 15: 15, 16: 15, 17: 15, 18: 15, 19: 10, 20: 10 }
+                }
+            },
+
+            "Armor_1": {
+                normal: {
+                    "Elunium": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 60, 6: 40, 7: 40, 8: 20, 9: 20, 10: 9 },
+                    "Carnium": { 11: 20, 12: 20, 13: 16, 14: 16, 15: 15, 16: 15, 17: 14, 18: 14, 19: 10, 20: 10 }
+                },
+                cash: {
+                    "Elunium": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 100, 6: 95, 7: 80, 8: 80, 9: 60, 10: 50 },
+                    "Carnium": { 11: 20, 12: 20, 13: 16, 14: 16, 15: 15, 16: 15, 17: 15, 18: 15, 19: 10, 20: 10 }
+                }
+            },
+
+            "Armor_2": {
+                normal: {
+                    "Etherium": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 80, 5: 80, 6: 60, 7: 60, 8: 40, 9: 40, 10: 18 },
+                    "Enriched Etherium": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 95, 5: 85, 6: 70, 7: 65, 8: 55, 9: 45, 10: 25 },
+                    "Etel Carnium": { 11: 16, 12: 16, 13: 16, 14: 16, 15: 14, 16: 14, 17: 14, 18: 14, 19: 10, 20: 10 }
+                },
+                cash: {
+                    "Etherium": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 95, 6: 85, 7: 70, 8: 65, 9: 55, 10: 45 },
+                    "Enriched Etherium": { 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 95, 6: 85, 7: 70, 8: 65, 9: 55, 10: 45 },
+                    "Etel Carnium": { 11: 20, 12: 20, 13: 20, 14: 20, 15: 15, 16: 15, 17: 15, 18: 15, 19: 10, 20: 10 }
                 }
             }
-        };
-        // 2. กำหนด Zeny ที่ใช้ในการตีบวกสำหรับแต่ละประเภทและระดับไอเทม
-        // ค่า Zeny สำหรับแต่ละครั้งที่ตีบวก
-        const ZENY_COSTS = {
-            "Weapon": {
-                1: 50,
-                2: 200,
-                3: 5000,
-                4: 20000,
-                5: 50000
-            },
-            "Armor": {
-                1: 2000,
-                2: 30000
-            }
+
         };
 
         // 3. กำหนดกฎการตีบวกและวัสดุที่ใช้
@@ -374,9 +367,9 @@
         // 4. Blacksmith Blessing (BSB) Costs (เหมือนเดิม)
         const BSB_COSTS = {
             "normal": { // ช่วงไม่มีกิจกรรม
-                7: 1, 
-                8: 2, 
-                9: 4, 
+                7: 1,
+                8: 2,
+                9: 4,
                 10: 7,
                 11: 11,
                 12: 16,
@@ -385,9 +378,9 @@
             "cash": { // ช่วงกิจกรรม
                 7: 1,
                 8: 2,
-                9: 3, 
+                9: 3,
                 10: 4,
-                11: 7, 
+                11: 7,
                 12: 11,
                 13: 16,
             }
@@ -422,7 +415,7 @@
 
         // Helper function for random number (similar to Python's random.random())
         const random = {
-            random: function() {
+            random: function () {
                 return Math.random();
             }
         };
@@ -476,15 +469,15 @@
             }
 
             const [materialId, failEffectRaw, materialDisplayName, materialRangeStart, materialRangeEnd, zenyCost] = selectedMaterialValue.split('|');
-            
+
             const refineLevelToAttempt = currentRefineLevel;
             const itemKey = `${itemType}_${itemLevel}`;
-            
+
             const rateSet = useEventRate ? "cash" : "normal";
-            
+
             const ratesForMaterial = SUCCESS_RATES[itemKey]?.[rateSet]?.[materialId];
             const successRate = ratesForMaterial ? ratesForMaterial[refineLevelToAttempt] : undefined;
-            
+
             return successRate !== undefined ? `${successRate}%` : "N/A";
         }
 
@@ -519,10 +512,10 @@
             const itemLevel = parseInt(itemLevelInput.value);
             const useEventRate = eventRateCheckbox.checked;
             const itemKey = `${itemType}_${itemLevel}`;
-            
+
             const availableMaterials = REFINE_MATERIALS[itemType] ? REFINE_MATERIALS[itemType][itemLevel] : [];
             const previousSelection = refineMaterialSelect.value;
-            
+
             refineMaterialSelect.innerHTML = '';
 
             if (itemBroken) {
@@ -544,7 +537,7 @@
                 currentSuccessRateDisplay.textContent = "N/A";
                 return;
             }
-            
+
             refineOnceBtn.disabled = false;
 
             let hasValidMaterial = false;
@@ -562,7 +555,7 @@
                 if (currentRefineLevel >= rangeStart && currentRefineLevel <= rangeEnd) {
                     const rateSet = useEventRate ? "cash" : "normal";
                     const successRate = SUCCESS_RATES[itemKey]?.[rateSet]?.[materialId]?.[currentRefineLevel];
-                    
+
                     if (successRate !== undefined) {
                         const option = document.createElement('option');
                         const optionValue = `${materialId}|${failEffect}|${materialDisplayName}|${rangeStart}|${rangeEnd}|${zenyCost}`; // Add zeny_cost
@@ -622,7 +615,7 @@
 
             const refineLevelToAttempt = currentRefineLevel;
             const itemKey = `${itemType}_${itemLevel}`;
-            
+
             const rateSet = useEventRate ? "cash" : "normal";
             const successRate = SUCCESS_RATES[itemKey]?.[rateSet]?.[materialId]?.[refineLevelToAttempt];
 
@@ -630,7 +623,7 @@
                 logResult(`Error: ไม่พบอัตราสำเร็จสำหรับ ${materialDisplayName} ที่ระดับ +${refineLevelToAttempt} ในเรท ${rateSet}. โปรดตรวจสอบข้อมูล.`, "fail");
                 return;
             }
-            
+
             if (refineLevelToAttempt < parseInt(materialRangeStart) || refineLevelToAttempt > parseInt(materialRangeEnd)) {
                 logResult(`Error: วัสดุ ${materialDisplayName} ไม่สามารถใช้ตีบวกที่ระดับ +${refineLevelToAttempt} ได้. ช่วงที่รองรับคือ +${materialRangeStart} ถึง +${materialRangeEnd}.`, "fail");
                 return;
@@ -656,7 +649,7 @@
 
             // Simulate the refine attempt
             const randomNumber = random.random() * 100; // 0 to 99.999...
-            
+
             if (randomNumber < successRate) {
                 // Success
                 currentRefineLevel++;
@@ -730,7 +723,7 @@
         useBsbCheckbox.addEventListener('change', () => {
             // Re-evaluate material options (especially if BSB changes affects what's displayed, though not currently)
             // More importantly, it helps keep the UI state consistent with BSB usage rules
-            updateCurrentItemStatus(); 
+            updateCurrentItemStatus();
         });
 
         // Initial setup
@@ -739,4 +732,5 @@
         });
     </script>
 </body>
+
 </html>
